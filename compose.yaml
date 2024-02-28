@@ -1,0 +1,56 @@
+version: '3.7'
+
+services:
+  nginx:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-nginx
+    depends_on:
+      - php
+    volumes:
+      - ./public:/appdata/www/public:cached
+    ports:
+      - '8000:80'
+
+  php:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-php
+    volumes:
+      - ./:/appdata/www/
+    depends_on:
+      - database
+
+  database:
+    image: 'mysql:latest'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chat-mercure-api
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./mysql:/var/lib/mysql  
+
+  mercure:
+    image: dunglas/mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ':3000'
+      MERCURE_PUBLISHER_JWT_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdfX0.iHLdpAEjX4BqCsHJEegxRmO-Y6sMxXwNATrQyRNt3GY'
+      MERCURE_SUBSCRIBER_JWT_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdfX0.iHLdpAEjX4BqCsHJEegxRmO-Y6sMxXwNATrQyRNt3GY'
+      # Set the URL of your Symfony project (without trailing slash!) as value of the cors_origins directive
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_allowed_origins *
+    # Comment the following line to disable the development mode
+    ports:
+      - "3000:3000"
+    command: /usr/bin/caddy run --config /etc/caddy/Caddyfile.dev
+    volumes:
+      - mercure_data:/data
+      - mercure_config:/config
+
+
+volumes:
+  database_data:
+  mercure_data:
+  mercure_config:

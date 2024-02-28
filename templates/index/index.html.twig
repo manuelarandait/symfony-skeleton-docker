@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello IndexController!{% endblock %}
+
+{% block body %}
+    <script>
+        const eventSource = new EventSource('http://127.0.0.1:3000/.well-known/mercure?topic=' + encodeURIComponent('https://example.com/books/1'));
+        eventSource.onmessage = event => {
+            // Will be called every time an update is published by the server
+            console.log(JSON.parse(event.data));
+        }
+    </script>
+{% endblock %}
